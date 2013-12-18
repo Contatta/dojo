@@ -57,7 +57,7 @@ define([
 
 	var isValid, isReady, addListeners, cancel;
 	if(has('native-xhr2')){
-		// Any platform with XHR2 will only use the watch mechanism for timeout.
+        // Any platform with XHR2 will only use the watch mechanism for timeout.
 
 		isValid = function(response){
 			// summary:
@@ -70,9 +70,11 @@ define([
 			response.xhr.abort();
 		};
 		addListeners = function(_xhr, dfd, response){
-			// summary:
+            // summary:
 			//		Adds event listeners to the XMLHttpRequest object
-			function onLoad(evt){
+            var isUpload = 'upload' in _xhr;
+
+            function onLoad(evt){
 				dfd.handleResponse(response);
 			}
 			function onError(evt){
@@ -93,11 +95,18 @@ define([
 			_xhr.addEventListener('error', onError, false);
 			_xhr.addEventListener('progress', onProgress, false);
 
-			return function(){
+            if (isUpload)
+                _xhr.upload.addEventListener('progress', onProgress, false);
+
+            return function(){
 				_xhr.removeEventListener('load', onLoad, false);
 				_xhr.removeEventListener('error', onError, false);
 				_xhr.removeEventListener('progress', onProgress, false);
-				_xhr = null;
+
+                if (isUpload)
+                    _xhr.upload.removeEventListener('progress', onProgress, false);
+
+                _xhr = null;
 			};
 		};
 	}else{
